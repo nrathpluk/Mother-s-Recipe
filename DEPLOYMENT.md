@@ -1,185 +1,121 @@
 # Deployment Guide — Mother's Recipe
 
-Complete step-by-step guide to deploy:
-- **Backend** → Render (free tier)
-- **Database** → Neon (free PostgreSQL)
-- **Images** → Cloudinary (free tier)
-- **Frontend** → Cloudflare Pages (free tier)
+   | Service | Platform | Status |
+|---------|----------|--------|
+| Backend API | Render | ✅ Live |
+| Database | Neon (PostgreSQL) | ✅ Live |
+| Images | Cloudinary | ✅ Live |
+| Frontend | Cloudflare Pages | ✅ Live |
 
 ---
 
-## Step 1 — Set Up Neon (Database)
+## ต้องทำต่อ — Google Login Setup
 
-1. Go to https://neon.tech and sign up for free.
-2. Click **"New Project"** → give it a name like `mothers-recipe`.
-3. Select region closest to your users (Singapore for Thailand).
-4. After creation, click **"Connection string"** and copy the URL.
-   It looks like: `postgresql://user:pass@ep-xxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`
-5. **Save this URL** — you'll paste it into Render later.
+ระบบ Google Login ถูก implement เรียบร้อยแล้ว แต่ยังต้องตั้งค่าบน Google Cloud Console
+และใส่ Client ID ก่อนจะใช้งานได้จริง
 
----
+### 1. สร้าง Google OAuth2 Client ID
 
-## Step 2 — Set Up Cloudinary (Image Storage)
-
-1. Go to https://cloudinary.com and sign up for free.
-2. From the Dashboard, note your:
-   - **Cloud name** (e.g. `my-cloud`)
-   - **API Key**
-   - **API Secret**
-3. Create an **unsigned upload preset**:
-   - Go to **Settings → Upload → Upload presets**
-   - Click **"Add upload preset"**
-   - Set **Signing Mode** to **"Unsigned"**
-   - Under **Folder**, type `mothers-recipe`
-   - **Save** and copy the preset name (e.g. `mothers_recipe_preset`)
-4. Open `frontend/add-recipe.html` and replace:
-   ```js
-   const CLOUD_NAME    = "YOUR_CLOUD_NAME";       // ← your cloud name
-   const UPLOAD_PRESET = "YOUR_UNSIGNED_PRESET";  // ← your preset name
-   ```
+1. ไปที่ [Google Cloud Console](https://console.cloud.google.com)
+2. สร้าง Project ใหม่ หรือเลือก Project ที่มีอยู่
+3. เปิด **APIs & Services → OAuth consent screen**
+   - User Type: **External**
+   - กรอก App name (`Mother's Recipe`), User support email, Developer email
+   - Scopes: เพิ่ม `email` และ `profile`
+   - Save
+4. ไปที่ **APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID**
+   - Application type: **Web application**
+   - Name: `mothers-recipe-web`
+   - **Authorized JavaScript origins** — เพิ่ม:
+     ```
+     https://mothers-recipe.pages.dev
+     http://localhost:3000
+     http://127.0.0.1:5500
+     ```
+     *(ใส่ Cloudflare Pages URL จริงด้วย ถ้าต่างจากนี้)*
+5. คลิก **Create** → คัดลอก **Client ID**
+   รูปแบบ: `123456789-xxxxxxxxxxxx.apps.googleusercontent.com`
 
 ---
 
-## Step 3 — Deploy Backend to Render
+### 2. ใส่ Client ID ใน Render
 
-1. Push your project to GitHub:
-   ```bash
-   cd "Mother's Recipe"
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin https://github.com/YOUR_USERNAME/mothers-recipe.git
-   git push -u origin main
-   ```
+ไปที่ Render → Web Service → **Environment** → เพิ่ม:
 
-2. Go to https://render.com → Sign in → **New → Web Service**
+| Key | Value |
+|-----|-------|
+| `GOOGLE_CLIENT_ID` | `123456789-xxxxxxxxxxxx.apps.googleusercontent.com` |
 
-3. Connect your GitHub repository.
-
-4. Configure the service:
-   | Setting | Value |
-   |---------|-------|
-   | **Root Directory** | `backend` |
-   | **Runtime** | Python 3 |
-   | **Build Command** | `pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate` |
-   | **Start Command** | `gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --workers 2` |
-
-5. Under **Environment Variables**, add:
-   | Key | Value |
-   |-----|-------|
-   | `SECRET_KEY` | Click "Generate" | 1a8b8e1261aef62e4bbc3b3710ee00d5
-   | `DEBUG` | `False` |
-   | `DATABASE_URL` | Your Neon connection string |
-   | `CLOUDINARY_CLOUD_NAME` | Your cloud name |
-   | `CLOUDINARY_API_KEY` | Your API key |
-   | `CLOUDINARY_API_SECRET` | Your API secret |
-   | `ALLOWED_HOSTS` | `mothers-recipe-api.onrender.com` |
-   | `CORS_ALLOWED_ORIGINS` | Leave blank for now (fill after Step 4) |
-
-6. Click **Create Web Service**.
-   - Wait ~3 minutes for the first deploy.
-   - Note your backend URL: `https://mothers-recipe-api.onrender.com`
-
-7. Test the API is live:
-   ```
-   https://mothers-recipe-api.onrender.com/api/recipes/
-   ```
-   You should see `{"count":0,"results":[]}`.
-
-8. (Optional) Create a superuser via Render Shell:
-   ```bash
-   python manage.py createsuperuser
-   ```
+คลิก **Save Changes** — Render จะ redeploy อัตโนมัติ
 
 ---
 
-## Step 4 — Deploy Frontend to Cloudflare Pages
+### 3. ใส่ Client ID ใน Frontend
 
-1. **Update the API URL** in `frontend/js/api.js`:
-   ```js
-   const BASE_URL = "https://mothers-recipe-api.onrender.com/api";
-   ```
+เปิดไฟล์ `frontend/login.html` แล้วแก้บรรทัด 62:
 
-2. Push the change to GitHub.
+```html
+<!-- ก่อน -->
+data-client_id="YOUR_GOOGLE_CLIENT_ID"
 
-3. Go to https://pages.cloudflare.com → **Create a project → Connect to Git**
+<!-- หลัง -->
+data-client_id="123456789-xxxxxxxxxxxx.apps.googleusercontent.com"
+```
 
-4. Select your repository.
+จากนั้น commit และ push — Cloudflare Pages จะ deploy ให้อัตโนมัติ
 
-5. Configure:
-   | Setting | Value |
-   |---------|-------|
-   | **Project name** | `mothers-recipe` |
-   | **Production branch** | `main` |
-   | **Framework preset** | None |
-   | **Root directory** | `frontend` |
-   | **Build command** | *(leave blank)* |
-   | **Build output directory** | `/` |
-
-6. Click **Save and Deploy**.
-   - Your site will be live at: `https://mothers-recipe.pages.dev`
-
-7. **Go back to Render** → your web service → Environment → update:
-   ```
-   CORS_ALLOWED_ORIGINS = https://mothers-recipe.pages.dev
-   ```
-   Then click **Save changes** (triggers a redeploy automatically).
+```bash
+git add frontend/login.html
+git commit -m "config: add Google Client ID to login page"
+git push
+```
 
 ---
 
-## Step 5 — Test Everything
+### 4. ทดสอบ Google Login
 
-Work through this checklist:
-
-- [ ] Visit `https://mothers-recipe.pages.dev` — recipe list loads
-- [ ] Register a new account
-- [ ] Log in with the new account
-- [ ] Add a recipe (with photo upload via Cloudinary)
-- [ ] View the recipe detail page
-- [ ] Leave a review with star rating
-- [ ] Favorite the recipe
-- [ ] Log out → confirm you can still browse but not post
+- [ ] เปิด `https://mothers-recipe.pages.dev/login.html`
+- [ ] กดปุ่ม **Sign in with Google**
+- [ ] เลือก Google account
+- [ ] ควร redirect กลับหน้า Home และ login สำเร็จ
+- [ ] ตรวจสอบ `localStorage` ใน DevTools — ต้องมี `access_token`, `user`
+- [ ] ทดสอบ login ครั้งที่ 2 ด้วย account เดิม — ต้องไม่สร้าง user ซ้ำ
 
 ---
 
 ## Local Development
 
 ```bash
-# 1. Set up Python environment
+# 1. เปิด backend
 cd backend
-python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+venv/Scripts/activate        # Windows
 pip install -r requirements.txt
-
-# 2. Create .env file
-cp .env.example .env
-# Edit .env and fill in your values
-# For local DB you can use: DATABASE_URL=sqlite:///db.sqlite3
-
-# 3. Run migrations and start server
-python manage.py migrate
-python manage.py createsuperuser
 python manage.py runserver
 
-# 4. Serve the frontend (any static server works)
+# 2. เปิด frontend
 cd ../frontend
-npx serve .      # or use VS Code Live Server extension
+npx serve .                  # หรือใช้ VS Code Live Server
 ```
 
-For local frontend development, temporarily change `api.js`:
-```js
-const BASE_URL = "http://127.0.0.1:8000/api";
+`.env` ที่ใช้ local (ไม่ต้องการ DATABASE_URL — ใช้ SQLite):
 ```
-And add `http://localhost:3000` (or your port) to `CORS_ALLOWED_ORIGINS` in `.env`.
+DEBUG=True
+SECRET_KEY=local-dev-secret-key-change-in-production
+ALLOWED_HOSTS=localhost,127.0.0.1
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:5500
+GOOGLE_CLIENT_ID=          ← ใส่ Client ID ที่ได้จาก Google Cloud Console
+```
 
 ---
 
 ## Common Issues
 
-| Problem | Fix |
-|---------|-----|
-| `CORS` errors in browser | Check `CORS_ALLOWED_ORIGINS` matches your frontend URL exactly |
-| `401 Unauthorized` | Token expired or missing — check localStorage in DevTools |
-| Images not uploading | Check `CLOUD_NAME` and `UPLOAD_PRESET` in add-recipe.html |
-| Render cold start slow | Free tier sleeps after 15 min — first request takes ~30s |
-| `SSL required` DB error | Set `ssl_require=True` in settings.py (already done for `DEBUG=False`) |
+| ปัญหา | วิธีแก้ |
+|-------|---------|
+| ปุ่ม Google ไม่ขึ้น | ตรวจสอบว่า `data-client_id` ไม่ใช่ `YOUR_GOOGLE_CLIENT_ID` |
+| Google login error: "idpiframe_initialization_failed" | URL ไม่อยู่ใน Authorized JavaScript origins ของ Google Cloud |
+| Google login ผ่านแต่ backend คืน 401 | `GOOGLE_CLIENT_ID` ใน Render ยังไม่ได้ตั้งค่า |
+| CORS errors | ตรวจสอบ `CORS_ALLOWED_ORIGINS` ใน Render ตรงกับ Cloudflare Pages URL |
+| 401 Unauthorized | Token หมดอายุ — เช็ค localStorage ใน DevTools |
+| รูปภาพ upload ไม่ได้ | เช็ค `CLOUD_NAME` และ `UPLOAD_PRESET` ใน add-recipe.html |
+| Render ช้าตอนเปิดครั้งแรก | Free tier หลับหลัง 15 นาที — request แรกใช้เวลา ~30 วินาที |

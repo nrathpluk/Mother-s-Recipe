@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,6 +9,7 @@
   <!-- Google Identity Services SDK -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
+
 <body class="auth-page">
 
   <nav class="navbar">
@@ -26,26 +28,14 @@
       <form id="login-form" novalidate>
         <div class="form-group">
           <label for="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            required
-            autocomplete="username"
-            placeholder="your_username"
-          />
+          <input type="text" id="username" name="username" required autocomplete="username"
+            placeholder="your_username" />
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            required
-            autocomplete="current-password"
-            placeholder="••••••••"
-          />
+          <input type="password" id="password" name="password" required autocomplete="current-password"
+            placeholder="••••••••" />
         </div>
 
         <button type="submit" class="btn btn-primary btn-full" id="login-btn">
@@ -58,19 +48,12 @@
 
       <!-- Google Sign-In button rendered by Google Identity Services -->
       <!-- Replace YOUR_GOOGLE_CLIENT_ID with your actual Client ID -->
-      <div id="g_id_onload"
-           data-client_id="YOUR_GOOGLE_CLIENT_ID"
-           data-callback="handleGoogleLogin"
-           data-auto_prompt="false">
+      <div id="g_id_onload" data-client_id="261834890802-qjjlpl6ftfio5hjv4alql89rrdasrl0k.apps.googleusercontent.com"
+        data-callback="handleGoogleLogin" data-auto_prompt="false">
       </div>
       <div class="google-btn-wrapper">
-        <div class="g_id_signin"
-             data-type="standard"
-             data-size="large"
-             data-theme="outline"
-             data-text="sign_in_with"
-             data-shape="rectangular"
-             data-width="348">
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with"
+          data-shape="rectangular" data-width="348">
         </div>
       </div>
 
@@ -117,4 +100,5 @@
   </script>
 
 </body>
+
 </html>
