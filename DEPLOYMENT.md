@@ -67,7 +67,7 @@ Complete step-by-step guide to deploy:
 5. Under **Environment Variables**, add:
    | Key | Value |
    |-----|-------|
-   | `SECRET_KEY` | Click "Generate" |
+   | `SECRET_KEY` | Click "Generate" | 1a8b8e1261aef62e4bbc3b3710ee00d5
    | `DEBUG` | `False` |
    | `DATABASE_URL` | Your Neon connection string |
    | `CLOUDINARY_CLOUD_NAME` | Your cloud name |
