@@ -8,7 +8,7 @@
  */
 
 // ─── Change this to your Render backend URL before deploying ───────────────
-const BASE_URL = "https://mothers-recipe-api.onrender.com/api";
+const BASE_URL = "https://mother-s-recipe.onrender.com/api";
 // For local development use: "http://127.0.0.1:8000/api"
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -85,17 +85,17 @@ function extractErrorMessage(data) {
 // ─── Convenience methods ───────────────────────────────────────────────────
 
 export const api = {
-  get:    (endpoint)              => request(endpoint, { method: "GET" }),
-  post:   (endpoint, body)        => request(endpoint, { method: "POST",   body: JSON.stringify(body) }),
-  put:    (endpoint, body)        => request(endpoint, { method: "PUT",    body: JSON.stringify(body) }),
-  patch:  (endpoint, body)        => request(endpoint, { method: "PATCH",  body: JSON.stringify(body) }),
-  delete: (endpoint)              => request(endpoint, { method: "DELETE" }),
+  get: (endpoint) => request(endpoint, { method: "GET" }),
+  post: (endpoint, body) => request(endpoint, { method: "POST", body: JSON.stringify(body) }),
+  put: (endpoint, body) => request(endpoint, { method: "PUT", body: JSON.stringify(body) }),
+  patch: (endpoint, body) => request(endpoint, { method: "PATCH", body: JSON.stringify(body) }),
+  delete: (endpoint) => request(endpoint, { method: "DELETE" }),
 };
 
 // ─── Auth helpers ──────────────────────────────────────────────────────────
 
 export function saveAuthData({ access, refresh, user }) {
-  localStorage.setItem("access_token",  access);
+  localStorage.setItem("access_token", access);
   localStorage.setItem("refresh_token", refresh);
   localStorage.setItem("user", JSON.stringify(user));
 }
