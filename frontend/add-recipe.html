@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Recipe — Mother's Recipe</title>
+  <link rel="stylesheet" href="/css/style.css" />
+
+  <!--
+    Cloudinary Upload Widget script.
+    This lets the browser upload images DIRECTLY to Cloudinary
+    without going through your backend — fast and saves server bandwidth.
+  -->
+  <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <a href="/index.html" class="nav-logo">🍲 Mother's Recipe</a>
+    <div id="nav-links"></div>
+  </nav>
+
+  <main class="container form-page">
+    <h1 id="page-title">Add a New Recipe</h1>
+    <p id="error-msg" class="msg error" style="display:none;"></p>
+    <p id="success-msg" class="msg success" style="display:none;"></p>
+
+    <form id="recipe-form" novalidate>
+
+      <!-- Basic Info -->
+      <section class="form-section">
+        <h2>Basic Info</h2>
+
+        <div class="form-group">
+          <label for="title">Recipe Title *</label>
+          <input type="text" id="title" required placeholder="e.g. Tom Yum Soup" />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description *</label>
+          <textarea id="description" rows="3" required
+            placeholder="Briefly describe the dish and its origin…"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cooking_time">Cooking Time (minutes) *</label>
+            <input type="number" id="cooking_time" min="1" required placeholder="30" />
+          </div>
+          <div class="form-group">
+            <label for="difficulty">Difficulty *</label>
+            <select id="difficulty" required>
+              <option value="">Select…</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Image Upload via Cloudinary -->
+      <section class="form-section">
+        <h2>Recipe Photo</h2>
+        <p class="form-hint">
+          Upload directly to Cloudinary. The image URL is automatically saved when you submit.
+        </p>
+
+        <div class="upload-area">
+          <img id="image-preview" src="" alt="" style="display:none;" />
+          <button type="button" id="upload-btn" class="btn btn-outline">
+            📷 Upload Photo
+          </button>
+          <p id="upload-status" class="form-hint"></p>
+        </div>
+        <!-- Hidden field — filled after Cloudinary upload -->
+        <input type="hidden" id="image_url" />
+      </section>
+
+      <!-- Ingredients -->
+      <section class="form-section">
+        <h2>Ingredients</h2>
+        <p class="form-hint">Add each ingredient on its own line.</p>
+        <div id="ingredients-container">
+          <div class="dynamic-field">
+            <input type="text" class="ingredient-input" placeholder="e.g. 2 cups jasmine rice" />
+            <button type="button" class="btn-remove" onclick="removeField(this)">✕</button>
+          </div>
+        </div>
+        <button type="button" id="add-ingredient" class="btn btn-secondary btn-sm">
+          + Add Ingredient
+        </button>
+      </section>
+
+      <!-- Steps -->
+      <section class="form-section">
+        <h2>Instructions</h2>
+        <p class="form-hint">Add each step in order.</p>
+        <div id="steps-container">
+          <div class="dynamic-field">
+            <textarea class="step-input" rows="2" placeholder="Step 1: …"></textarea>
+            <button type="button" class="btn-remove" onclick="removeField(this)">✕</button>
+          </div>
+        </div>
+        <button type="button" id="add-step" class="btn btn-secondary btn-sm">
+          + Add Step
+        </button>
+      </section>
+
+      <div class="form-actions">
+        <a href="/index.html" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="submit-btn">Save Recipe</button>
+      </div>
+    </form>
+  </main>
+
+  <script type="module">
+    import { api, isLoggedIn, getUser } from "./js/api.js";
+    import { initNav } from "./js/main.js";
+
+    // Redirect anonymous users
+    if (!isLoggedIn()) window.location.href = "/login.html";
+    initNav();
+
+    // ── Check if we're editing an existing recipe ─────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get("id");
+    let existingRecipe = null;
+
+    if (editId) {
+      document.getElementById("page-title").textContent = "Edit Recipe";
+      document.getElementById("submit-btn").textContent = "Update Recipe";
+      loadExistingRecipe(editId);
+    }
+
+    async function loadExistingRecipe(id) {
+      try {
+        existingRecipe = await api.get(`/recipes/${id}/`);
+        const user = getUser();
+        // Only the owner can edit
+        if (existingRecipe.created_by.id !== user.id) {
+          window.location.href = `/recipe-detail.html?id=${id}`;
+          return;
+        }
+        prefillForm(existingRecipe);
+      } catch (err) {
+        alert("Could not load recipe: " + err.message);
+      }
+    }
+
+    function prefillForm(recipe) {
+      document.getElementById("title").value = recipe.title;
+      document.getElementById("description").value = recipe.description;
+      document.getElementById("cooking_time").value = recipe.cooking_time;
+      document.getElementById("difficulty").value = recipe.difficulty;
+      document.getElementById("image_url").value = recipe.image_url;
+
+      if (recipe.image_url) {
+        const preview = document.getElementById("image-preview");
+        preview.src = recipe.image_url;
+        preview.style.display = "block";
+        document.getElementById("upload-status").textContent = "Current image loaded.";
+      }
+
+      // Prefill ingredients
+      const ingCon = document.getElementById("ingredients-container");
+      ingCon.innerHTML = "";
+      recipe.ingredients.forEach((val) => addField("ingredients-container", "ingredient-input", val));
+
+      // Prefill steps
+      const stepCon = document.getElementById("steps-container");
+      stepCon.innerHTML = "";
+      recipe.steps.forEach((val) => addStepField(val));
+    }
+
+    // ── Cloudinary Upload Widget ──────────────────────────────────────────
+    //
+    // IMPORTANT: Replace 'YOUR_CLOUD_NAME' and 'YOUR_UNSIGNED_PRESET' below.
+    //
+    // To create an unsigned upload preset:
+    //   1. Go to cloudinary.com → Settings → Upload
+    //   2. Scroll to "Upload presets" → Add upload preset
+    //   3. Set "Signing mode" to "Unsigned"
+    //   4. Copy the preset name
+    //
+    const CLOUD_NAME = "dpxj3wz9w";    // ← replace this
+    const UPLOAD_PRESET = "mothers_recipe_preset"; // ← replace this
+
+    const widget = cloudinary.createUploadWidget(
+      {
+        cloudName: CLOUD_NAME,
+        uploadPreset: UPLOAD_PRESET,
+        sources: ["local", "camera", "url"],
+        multiple: false,
+        maxFileSize: 5000000,   // 5 MB limit
+        cropping: false,
+        resourceType: "image",
+        folder: "mothers-recipe",
+      },
+      (error, result) => {
+        if (error) {
+          document.getElementById("upload-status").textContent = "Upload failed: " + error.message;
+          return;
+        }
+        if (result.event === "success") {
+          const url = result.info.secure_url;
+          document.getElementById("image_url").value = url;
+          document.getElementById("upload-status").textContent = "✓ Image uploaded!";
+          const preview = document.getElementById("image-preview");
+          preview.src = url;
+          preview.style.display = "block";
+        }
+      }
+    );
+
+    document.getElementById("upload-btn").addEventListener("click", () => widget.open());
+
+    // ── Dynamic ingredient / step fields ─────────────────────────────────
+
+    function addField(containerId, className, value = "") {
+      const div = document.createElement("div");
+      div.className = "dynamic-field";
+      div.innerHTML = `
+        <input type="text" class="${className}" placeholder="Add item…" value="${value}" />
+        <button type="button" class="btn-remove" onclick="removeField(this)">✕</button>
+      `;
+      document.getElementById(containerId).appendChild(div);
+    }
+
+    function addStepField(value = "") {
+      const div = document.createElement("div");
+      div.className = "dynamic-field";
+      const index = document.getElementById("steps-container").children.length + 1;
+      div.innerHTML = `
+        <textarea class="step-input" rows="2" placeholder="Step ${index}: …">${value}</textarea>
+        <button type="button" class="btn-remove" onclick="removeField(this)">✕</button>
+      `;
+      document.getElementById("steps-container").appendChild(div);
+    }
+
+    // Expose to onclick attributes
+    window.removeField = (btn) => btn.closest(".dynamic-field").remove();
+
+    document.getElementById("add-ingredient").addEventListener("click", () =>
+      addField("ingredients-container", "ingredient-input")
+    );
+    document.getElementById("add-step").addEventListener("click", () => addStepField());
+
+    // ── Form submission ───────────────────────────────────────────────────
+    document.getElementById("recipe-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("error-msg");
+      const successEl = document.getElementById("success-msg");
+      errorEl.style.display = "none";
+      successEl.style.display = "none";
+
+      // Collect dynamic ingredient inputs
+      const ingredients = Array.from(
+        document.querySelectorAll(".ingredient-input")
+      )
+        .map((i) => i.value.trim())
+        .filter(Boolean);
+
+      // Collect dynamic step textareas
+      const steps = Array.from(
+        document.querySelectorAll(".step-input")
+      )
+        .map((t) => t.value.trim())
+        .filter(Boolean);
+
+      const payload = {
+        title: document.getElementById("title").value.trim(),
+        description: document.getElementById("description").value.trim(),
+        cooking_time: parseInt(document.getElementById("cooking_time").value),
+        difficulty: document.getElementById("difficulty").value,
+        image_url: document.getElementById("image_url").value,
+        ingredients,
+        steps,
+      };
+
+      // Basic client-side validation
+      if (!payload.title || !payload.description || !payload.cooking_time || !payload.difficulty) {
+        errorEl.textContent = "Please fill in all required fields.";
+        errorEl.style.display = "block";
+        return;
+      }
+      if (ingredients.length === 0) {
+        errorEl.textContent = "Please add at least one ingredient.";
+        errorEl.style.display = "block";
+        return;
+      }
+      if (steps.length === 0) {
+        errorEl.textContent = "Please add at least one step.";
+        errorEl.style.display = "block";
+        return;
+      }
+
+      const btn = document.getElementById("submit-btn");
+      btn.disabled = true;
+      btn.textContent = "Saving…";
+
+      try {
+        let recipe;
+        if (editId) {
+          recipe = await api.put(`/recipes/${editId}/`, payload);
+        } else {
+          recipe = await api.post("/recipes/", payload);
+        }
+        successEl.textContent = "Recipe saved! Redirecting…";
+        successEl.style.display = "block";
+        setTimeout(() => {
+          window.location.href = `/recipe-detail.html?id=${recipe.id}`;
+        }, 1200);
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = editId ? "Update Recipe" : "Save Recipe";
+      }
+    });
+  </script>
+
+</body>
+
+</html>

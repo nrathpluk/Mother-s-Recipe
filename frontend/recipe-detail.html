@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipe — Mother's Recipe</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="/index.html" class="nav-logo">🍲 Mother's Recipe</a>
+    <div id="nav-links"></div>
+  </nav>
+
+  <main class="container">
+    <div id="loading" class="loading-spinner">Loading recipe…</div>
+    <div id="recipe-content" style="display:none;">
+
+      <!-- Hero image -->
+      <div class="detail-hero">
+        <img id="recipe-image" src="" alt="" />
+      </div>
+
+      <!-- Recipe header -->
+      <div class="detail-header">
+        <div class="detail-meta" id="recipe-meta"></div>
+        <h1 id="recipe-title"></h1>
+        <p id="recipe-description" class="recipe-description"></p>
+
+        <div class="detail-actions">
+          <span id="rating-display" class="stars"></span>
+          <button id="favorite-btn" class="btn btn-outline">♡ Favorite</button>
+          <!-- Only shown to the recipe owner -->
+          <a id="edit-btn" href="#" class="btn btn-secondary" style="display:none;">Edit Recipe</a>
+          <button id="delete-btn" class="btn btn-danger" style="display:none;">Delete</button>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Ingredients -->
+        <section class="detail-section">
+          <h2>Ingredients</h2>
+          <ul id="ingredients-list" class="ingredients-list"></ul>
+        </section>
+
+        <!-- Steps -->
+        <section class="detail-section">
+          <h2>Instructions</h2>
+          <ol id="steps-list" class="steps-list"></ol>
+        </section>
+      </div>
+
+      <!-- Reviews -->
+      <section class="reviews-section">
+        <h2>Reviews <span id="review-count" class="count-badge"></span></h2>
+
+        <!-- Review form (only shown when logged in) -->
+        <div id="review-form-container" style="display:none;">
+          <h3>Leave a Review</h3>
+          <p id="review-error" class="msg error" style="display:none;"></p>
+          <form id="review-form">
+            <div class="form-group">
+              <label>Rating</label>
+              <div class="star-picker" id="star-picker">
+                <!-- Stars rendered by JS -->
+              </div>
+              <input type="hidden" id="rating-value" value="0" />
+            </div>
+            <div class="form-group">
+              <label for="review-comment">Comment</label>
+              <textarea id="review-comment" rows="3" placeholder="Share your thoughts…" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Review</button>
+          </form>
+        </div>
+
+        <div id="reviews-list" class="reviews-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { api, isLoggedIn, getUser } from "./js/api.js";
+    import { initNav, renderStars, difficultyBadge, escapeHtml, showMessage } from "./js/main.js";
+
+    initNav();
+
+    // Get recipe ID from URL: /recipe-detail.html?id=42
+    const params   = new URLSearchParams(window.location.search);
+    const recipeId = params.get("id");
+
+    if (!recipeId) {
+      document.getElementById("loading").textContent = "Recipe not found.";
+    } else {
+      loadRecipe();
+    }
+
+    async function loadRecipe() {
+      try {
+        const recipe = await api.get(`/recipes/${recipeId}/`);
+        renderRecipe(recipe);
+      } catch (err) {
+        document.getElementById("loading").textContent = "Failed to load recipe: " + err.message;
+      }
+    }
+
+    function renderRecipe(recipe) {
+      document.getElementById("loading").style.display   = "none";
+      document.getElementById("recipe-content").style.display = "block";
+
+      document.title = recipe.title + " — Mother's Recipe";
+
+      // Image
+      const img = document.getElementById("recipe-image");
+      img.src = recipe.image_url || "https://placehold.co/900x400?text=No+Image";
+      img.alt = recipe.title;
+
+      // Meta badges
+      document.getElementById("recipe-meta").innerHTML =
+        `${difficultyBadge(recipe.difficulty)} <span class="cook-time">⏱ ${recipe.cooking_time} min</span>
+         <span class="author">by ${escapeHtml(recipe.created_by.username)}</span>`;
+
+      document.getElementById("recipe-title").textContent       = recipe.title;
+      document.getElementById("recipe-description").textContent = recipe.description;
+      document.getElementById("rating-display").innerHTML       = renderStars(recipe.average_rating);
+      document.getElementById("review-count").textContent       = recipe.review_count;
+
+      // Ingredients
+      document.getElementById("ingredients-list").innerHTML =
+        recipe.ingredients.map((i) => `<li>${escapeHtml(i)}</li>`).join("");
+
+      // Steps
+      document.getElementById("steps-list").innerHTML =
+        recipe.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("");
+
+      // Reviews
+      renderReviews(recipe.reviews);
+
+      // Owner controls
+      const user = getUser();
+      if (user && user.id === recipe.created_by.id) {
+        document.getElementById("edit-btn").href         = `/add-recipe.html?id=${recipe.id}`;
+        document.getElementById("edit-btn").style.display   = "inline-block";
+        document.getElementById("delete-btn").style.display = "inline-block";
+        document.getElementById("review-form-container").style.display = "none";
+      } else if (isLoggedIn()) {
+        document.getElementById("review-form-container").style.display = "block";
+      }
+
+      // Favorite button
+      if (isLoggedIn()) {
+        setupFavoriteButton(recipe.id);
+      }
+
+      // Delete button
+      document.getElementById("delete-btn").addEventListener("click", async () => {
+        if (!confirm("Delete this recipe? This cannot be undone.")) return;
+        try {
+          await api.delete(`/recipes/${recipe.id}/`);
+          window.location.href = "/index.html";
+        } catch (err) {
+          alert("Failed to delete: " + err.message);
+        }
+      });
+
+      // Review form
+      setupReviewForm(recipe.id);
+    }
+
+    // ── Star picker UI ────────────────────────────────────────────────────
+    function setupReviewForm(recipeId) {
+      const picker = document.getElementById("star-picker");
+      let selected = 0;
+
+      // Render 5 clickable stars
+      for (let i = 1; i <= 5; i++) {
+        const star = document.createElement("span");
+        star.textContent = "☆";
+        star.className   = "star-btn";
+        star.dataset.val = i;
+
+        star.addEventListener("click", () => {
+          selected = i;
+          document.getElementById("rating-value").value = i;
+          // Update visual state
+          picker.querySelectorAll(".star-btn").forEach((s) => {
+            s.textContent = parseInt(s.dataset.val) <= i ? "★" : "☆";
+            s.classList.toggle("active", parseInt(s.dataset.val) <= i);
+          });
+        });
+
+        picker.appendChild(star);
+      }
+
+      document.getElementById("review-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errorEl = document.getElementById("review-error");
+        errorEl.style.display = "none";
+
+        const rating  = parseInt(document.getElementById("rating-value").value);
+        const comment = document.getElementById("review-comment").value.trim();
+
+        if (rating === 0) {
+          errorEl.textContent   = "Please select a star rating.";
+          errorEl.style.display = "block";
+          return;
+        }
+
+        try {
+          await api.post("/reviews/", { recipe: recipeId, rating, comment });
+          // Reload to show updated reviews and average
+          loadRecipe();
+          document.getElementById("review-form").reset();
+          picker.querySelectorAll(".star-btn").forEach((s) => (s.textContent = "☆"));
+          selected = 0;
+        } catch (err) {
+          errorEl.textContent   = err.message;
+          errorEl.style.display = "block";
+        }
+      });
+    }
+
+    // ── Reviews list ──────────────────────────────────────────────────────
+    function renderReviews(reviews) {
+      const container = document.getElementById("reviews-list");
+      if (!reviews.length) {
+        container.innerHTML = '<p class="empty-state">No reviews yet. Be the first!</p>';
+        return;
+      }
+      container.innerHTML = reviews.map((r) => `
+        <div class="review-card">
+          <div class="review-header">
+            <strong>${escapeHtml(r.user.username)}</strong>
+            <span class="stars">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</span>
+            <span class="review-date">${new Date(r.created_at).toLocaleDateString()}</span>
+          </div>
+          <p>${escapeHtml(r.comment)}</p>
+        </div>
+      `).join("");
+    }
+
+    // ── Favorite toggle ───────────────────────────────────────────────────
+    async function setupFavoriteButton(recipeId) {
+      const btn = document.getElementById("favorite-btn");
+      // Check if already favorited
+      try {
+        const favorites = await api.get("/favorites/");
+        const isFav     = favorites.some((f) => f.recipe.id === parseInt(recipeId));
+        btn.textContent = isFav ? "♥ Favorited" : "♡ Favorite";
+        btn.classList.toggle("btn-primary", isFav);
+      } catch (_) { /* ignore */ }
+
+      btn.addEventListener("click", async () => {
+        try {
+          const result = await api.post("/favorites/", { recipe_id: recipeId });
+          btn.textContent = result.favorited ? "♥ Favorited" : "♡ Favorite";
+          btn.classList.toggle("btn-primary", result.favorited);
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>

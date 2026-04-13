@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Mother's Recipe</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="auth-page">
+
+  <nav class="navbar">
+    <a href="/index.html" class="nav-logo">🍲 Mother's Recipe</a>
+    <div id="nav-links"></div>
+  </nav>
+
+  <main class="auth-container">
+    <div class="auth-card">
+      <h1>Welcome back 👋</h1>
+      <p class="auth-subtitle">Sign in to share and save your favorite recipes.</p>
+
+      <!-- Error message shown on failed login -->
+      <p id="error-msg" class="msg error" style="display:none;"></p>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            required
+            autocomplete="username"
+            placeholder="your_username"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+          Login
+        </button>
+      </form>
+
+      <p class="auth-switch">
+        Don't have an account? <a href="/register.html">Register here</a>
+      </p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initNav, isLoggedIn } from "./js/main.js";
+
+    // Already logged in → redirect home
+    if (isLoggedIn()) window.location.href = "/index.html";
+
+    initNav();
+
+    // Inline login logic (auth.js handles the form submit)
+    import("./js/auth.js");
+
+    // Show loading state on submit
+    document.getElementById("login-form").addEventListener("submit", () => {
+      document.getElementById("login-btn").textContent = "Logging in…";
+    }, { once: true });
+  </script>
+
+</body>
+</html>

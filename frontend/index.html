@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mother's Recipe</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <a href="/index.html" class="nav-logo">🍲 Mother's Recipe</a>
+    <div id="nav-links"></div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Recipes Made with Love</h1>
+    <p>Discover and share home-cooked recipes from families around the world.</p>
+    <form id="search-form" class="search-bar">
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Search recipes or ingredients…"
+        autocomplete="off"
+      />
+      <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+  </section>
+
+  <!-- Recipe grid -->
+  <main class="container">
+    <div id="loading" class="loading-spinner">Loading recipes…</div>
+    <div id="recipe-grid" class="recipe-grid"></div>
+
+    <!-- Pagination -->
+    <div id="pagination" class="pagination"></div>
+  </main>
+
+  <footer class="footer">
+    <p>© 2025 Mother's Recipe — Built with ❤️</p>
+  </footer>
+
+  <script type="module">
+    import { api, isLoggedIn } from "./js/api.js";
+    import { initNav, renderStars, difficultyBadge, escapeHtml } from "./js/main.js";
+
+    initNav();
+
+    let currentPage = 1;
+    let currentSearch = "";
+
+    // ── Build a recipe card HTML string ──────────────────────────────────
+    function buildCard(recipe) {
+      const rating  = renderStars(recipe.average_rating);
+      const badge   = difficultyBadge(recipe.difficulty);
+      const imgSrc  = recipe.image_url || "https://placehold.co/400x250?text=No+Image";
+
+      return `
+        <article class="recipe-card" onclick="window.location.href='/recipe-detail.html?id=${recipe.id}'">
+          <img src="${imgSrc}" alt="${escapeHtml(recipe.title)}" loading="lazy" />
+          <div class="card-body">
+            <div class="card-meta">
+              ${badge}
+              <span class="cook-time">⏱ ${recipe.cooking_time} min</span>
+            </div>
+            <h2>${escapeHtml(recipe.title)}</h2>
+            <p class="card-description">${escapeHtml(recipe.description.slice(0, 100))}…</p>
+            <div class="card-footer">
+              <span class="stars">${rating}</span>
+              <span class="author">by ${escapeHtml(recipe.created_by.username)}</span>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    // ── Fetch and render recipes ──────────────────────────────────────────
+    async function loadRecipes(page = 1, search = "") {
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("recipe-grid").innerHTML = "";
+      document.getElementById("pagination").innerHTML = "";
+
+      let endpoint = `/recipes/?page=${page}`;
+      if (search) endpoint += `&search=${encodeURIComponent(search)}`;
+
+      try {
+        const data = await api.get(endpoint);
+        document.getElementById("loading").style.display = "none";
+
+        if (data.results.length === 0) {
+          document.getElementById("recipe-grid").innerHTML =
+            '<p class="empty-state">No recipes found. <a href="/add-recipe.html">Add the first one!</a></p>';
+          return;
+        }
+
+        document.getElementById("recipe-grid").innerHTML = data.results.map(buildCard).join("");
+        renderPagination(data, page);
+      } catch (err) {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("recipe-grid").innerHTML =
+          `<p class="error-state">Failed to load recipes: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    // ── Pagination controls ───────────────────────────────────────────────
+    function renderPagination(data, page) {
+      const container = document.getElementById("pagination");
+      const html = [];
+
+      if (data.previous) {
+        html.push(`<button class="btn btn-outline" data-page="${page - 1}">← Previous</button>`);
+      }
+      html.push(`<span class="page-info">Page ${page}</span>`);
+      if (data.next) {
+        html.push(`<button class="btn btn-outline" data-page="${page + 1}">Next →</button>`);
+      }
+
+      container.innerHTML = html.join("");
+      container.querySelectorAll("button[data-page]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          currentPage = parseInt(btn.dataset.page);
+          loadRecipes(currentPage, currentSearch);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+    }
+
+    // ── Search form ───────────────────────────────────────────────────────
+    document.getElementById("search-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      currentSearch = document.getElementById("search-input").value.trim();
+      currentPage   = 1;
+      loadRecipes(currentPage, currentSearch);
+    });
+
+    // ── Initial load ──────────────────────────────────────────────────────
+    loadRecipes();
+  </script>
+
+</body>
+</html>
