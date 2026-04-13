@@ -10,28 +10,29 @@
 
   <!-- Navigation -->
   <nav class="navbar">
-    <a href="/index.html" class="nav-logo">🍲 Mother's Recipe</a>
+    <a href="/index.html" class="nav-logo" data-i18n="nav.logo">🍲 Mother's Recipe</a>
     <div id="nav-links"></div>
   </nav>
 
   <!-- Hero -->
   <section class="hero">
-    <h1>Recipes Made with Love</h1>
-    <p>Discover and share home-cooked recipes from families around the world.</p>
+    <h1 data-i18n="hero.title">Recipes Made with Love</h1>
+    <p data-i18n="hero.subtitle">Discover and share home-cooked recipes from families around the world.</p>
     <form id="search-form" class="search-bar">
       <input
         type="text"
         id="search-input"
         placeholder="Search recipes or ingredients…"
+        data-i18n-placeholder="search.placeholder"
         autocomplete="off"
       />
-      <button type="submit" class="btn btn-primary">Search</button>
+      <button type="submit" class="btn btn-primary" data-i18n="search.button">Search</button>
     </form>
   </section>
 
   <!-- Recipe grid -->
   <main class="container">
-    <div id="loading" class="loading-spinner">Loading recipes…</div>
+    <div id="loading" class="loading-spinner" data-i18n="recipes.loading">Loading recipes…</div>
     <div id="recipe-grid" class="recipe-grid"></div>
 
     <!-- Pagination -->
@@ -39,13 +40,15 @@
   </main>
 
   <footer class="footer">
-    <p>© 2025 Mother's Recipe — Built with ❤️</p>
+    <p data-i18n="footer.text">© 2025 Mother's Recipe — Built with ❤️</p>
   </footer>
 
   <script type="module">
     import { api, isLoggedIn } from "./js/api.js";
     import { initNav, renderStars, difficultyBadge, escapeHtml } from "./js/main.js";
+    import { i18n } from "./js/i18n.js";
 
+    i18n.init();
     initNav();
 
     let currentPage = 1;
@@ -63,7 +66,7 @@
           <div class="card-body">
             <div class="card-meta">
               ${badge}
-              <span class="cook-time">⏱ ${recipe.cooking_time} min</span>
+              <span class="cook-time">⏱ ${recipe.cooking_time} ${i18n.t("card.min")}</span>
             </div>
             <h2>${escapeHtml(recipe.title)}</h2>
             <p class="card-description">${escapeHtml(recipe.description.slice(0, 100))}…</p>
@@ -91,7 +94,7 @@
 
         if (data.results.length === 0) {
           document.getElementById("recipe-grid").innerHTML =
-            '<p class="empty-state">No recipes found. <a href="/add-recipe.html">Add the first one!</a></p>';
+            `<p class="empty-state">${i18n.t("recipes.empty")}</p>`;
           return;
         }
 
@@ -100,7 +103,7 @@
       } catch (err) {
         document.getElementById("loading").style.display = "none";
         document.getElementById("recipe-grid").innerHTML =
-          `<p class="error-state">Failed to load recipes: ${escapeHtml(err.message)}</p>`;
+          `<p class="error-state">${i18n.t("recipes.error", { error: escapeHtml(err.message) })}</p>`;
       }
     }
 
@@ -110,11 +113,11 @@
       const html = [];
 
       if (data.previous) {
-        html.push(`<button class="btn btn-outline" data-page="${page - 1}">← Previous</button>`);
+        html.push(`<button class="btn btn-outline" data-page="${page - 1}">${i18n.t("pagination.prev")}</button>`);
       }
-      html.push(`<span class="page-info">Page ${page}</span>`);
+      html.push(`<span class="page-info">${i18n.t("pagination.page", { page })}</span>`);
       if (data.next) {
-        html.push(`<button class="btn btn-outline" data-page="${page + 1}">Next →</button>`);
+        html.push(`<button class="btn btn-outline" data-page="${page + 1}">${i18n.t("pagination.next")}</button>`);
       }
 
       container.innerHTML = html.join("");
@@ -132,6 +135,11 @@
       e.preventDefault();
       currentSearch = document.getElementById("search-input").value.trim();
       currentPage   = 1;
+      loadRecipes(currentPage, currentSearch);
+    });
+
+    // ── Re-render on language change ──────────────────────────────────────
+    document.addEventListener("i18n:langchange", () => {
       loadRecipes(currentPage, currentSearch);
     });
 

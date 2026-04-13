@@ -56,3 +56,4 @@ npm-debug.log*
 
 # Claude
 claude.md
+.claude/

@@ -1033,3 +1033,50 @@ a:hover { color: var(--terracotta-dk); text-decoration: underline; }
   .recipe-grid { grid-template-columns: 1fr; gap: 20px; }
   .hero-ornament { display: none; }
 }
+
+/* ── Language Toggle ────────────────────────────────────────────── */
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--cream-dark);
+  border-radius: 100px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.lang-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  padding: 4px 11px;
+  border-radius: 100px;
+  transition: background 0.2s ease, color 0.2s ease;
+  line-height: 1.4;
+}
+
+.lang-toggle-btn.active {
+  background: var(--terracotta);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(192, 90, 44, 0.30);
+}
+
+.lang-toggle-btn:not(.active):hover {
+  color: var(--terracotta);
+  background: rgba(192, 90, 44, 0.08);
+}
+
+/* Smooth fade when switching language */
+body {
+  transition: opacity 0.18s ease;
+}
+
+body.lang-transitioning {
+  opacity: 0;
+}

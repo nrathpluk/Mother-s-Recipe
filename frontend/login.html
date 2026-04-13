@@ -13,38 +13,40 @@
 <body class="auth-page">
 
   <nav class="navbar">
-    <a href="/index.html" class="nav-logo">🍲 Mother's Recipe</a>
+    <a href="/index.html" class="nav-logo" data-i18n="nav.logo">🍲 Mother's Recipe</a>
     <div id="nav-links"></div>
   </nav>
 
   <main class="auth-container">
     <div class="auth-card">
-      <h1>Welcome back 👋</h1>
-      <p class="auth-subtitle">Sign in to share and save your favorite recipes.</p>
+      <h1 data-i18n="login.title">Welcome back 👋</h1>
+      <p class="auth-subtitle" data-i18n="login.subtitle">Sign in to share and save your favorite recipes.</p>
 
       <!-- Error message shown on failed login -->
       <p id="error-msg" class="msg error" style="display:none;"></p>
 
       <form id="login-form" novalidate>
         <div class="form-group">
-          <label for="username">Username</label>
+          <label for="username" data-i18n="login.username_label">Username</label>
           <input type="text" id="username" name="username" required autocomplete="username"
-            placeholder="your_username" />
+            placeholder="your_username"
+            data-i18n-placeholder="login.username_ph" />
         </div>
 
         <div class="form-group">
-          <label for="password">Password</label>
+          <label for="password" data-i18n="login.password_label">Password</label>
           <input type="password" id="password" name="password" required autocomplete="current-password"
-            placeholder="••••••••" />
+            placeholder="••••••••"
+            data-i18n-placeholder="login.password_ph" />
         </div>
 
-        <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+        <button type="submit" class="btn btn-primary btn-full" id="login-btn" data-i18n="login.button">
           Login
         </button>
       </form>
 
       <!-- Divider -->
-      <div class="auth-divider">or</div>
+      <div class="auth-divider" data-i18n="login.divider">or</div>
 
       <!-- Google Sign-In button rendered by Google Identity Services -->
       <!-- Replace YOUR_GOOGLE_CLIENT_ID with your actual Client ID -->
@@ -60,7 +62,8 @@
       <p id="google-error-msg" class="msg error" style="display:none;"></p>
 
       <p class="auth-switch">
-        Don't have an account? <a href="/register.html">Register here</a>
+        <span data-i18n="login.no_account">Don't have an account?</span>
+        <a href="/register.html" data-i18n="login.register_anchor">Register here</a>
       </p>
     </div>
   </main>
@@ -68,10 +71,12 @@
   <script type="module">
     import { initNav, isLoggedIn } from "./js/main.js";
     import { api, saveAuthData } from "./js/api.js";
+    import { i18n } from "./js/i18n.js";
 
     // Already logged in → redirect home
     if (isLoggedIn()) window.location.href = "/index.html";
 
+    i18n.init();
     initNav();
 
     // Inline login logic (auth.js handles the form submit)
@@ -79,7 +84,7 @@
 
     // Show loading state on submit
     document.getElementById("login-form").addEventListener("submit", () => {
-      document.getElementById("login-btn").textContent = "Logging in…";
+      document.getElementById("login-btn").textContent = i18n.t("login.logging_in");
     }, { once: true });
 
     // Google Identity Services callback — must be a global function
@@ -93,7 +98,7 @@
         saveAuthData(data);
         window.location.href = "/index.html";
       } catch (err) {
-        googleErrorEl.textContent = err.message || "Google login failed. Please try again.";
+        googleErrorEl.textContent = err.message || i18n.t("login.google_error");
         googleErrorEl.style.display = "";
       }
     };

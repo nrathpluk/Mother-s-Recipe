@@ -18,12 +18,12 @@
 <body>
 
   <nav class="navbar">
-    <a href="/index.html" class="nav-logo">🍲 Mother's Recipe</a>
+    <a href="/index.html" class="nav-logo" data-i18n="nav.logo">🍲 Mother's Recipe</a>
     <div id="nav-links"></div>
   </nav>
 
   <main class="container form-page">
-    <h1 id="page-title">Add a New Recipe</h1>
+    <h1 id="page-title" data-i18n="recipe.add_title">Add a New Recipe</h1>
     <p id="error-msg" class="msg error" style="display:none;"></p>
     <p id="success-msg" class="msg success" style="display:none;"></p>
 
@@ -31,31 +31,36 @@
 
       <!-- Basic Info -->
       <section class="form-section">
-        <h2>Basic Info</h2>
+        <h2 data-i18n="recipe.section_basic">Basic Info</h2>
 
         <div class="form-group">
-          <label for="title">Recipe Title *</label>
-          <input type="text" id="title" required placeholder="e.g. Tom Yum Soup" />
+          <label for="title" data-i18n="recipe.label_title">Recipe Title *</label>
+          <input type="text" id="title" required
+            placeholder="e.g. Tom Yum Soup"
+            data-i18n-placeholder="recipe.ph_title" />
         </div>
 
         <div class="form-group">
-          <label for="description">Description *</label>
+          <label for="description" data-i18n="recipe.label_desc">Description *</label>
           <textarea id="description" rows="3" required
-            placeholder="Briefly describe the dish and its origin…"></textarea>
+            placeholder="Briefly describe the dish and its origin…"
+            data-i18n-placeholder="recipe.ph_desc"></textarea>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="cooking_time">Cooking Time (minutes) *</label>
-            <input type="number" id="cooking_time" min="1" required placeholder="30" />
+            <label for="cooking_time" data-i18n="recipe.label_time">Cooking Time (minutes) *</label>
+            <input type="number" id="cooking_time" min="1" required
+              placeholder="30"
+              data-i18n-placeholder="recipe.ph_time" />
           </div>
           <div class="form-group">
-            <label for="difficulty">Difficulty *</label>
+            <label for="difficulty" data-i18n="recipe.label_diff">Difficulty *</label>
             <select id="difficulty" required>
-              <option value="">Select…</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
+              <option value="" data-i18n="recipe.diff_select">Select…</option>
+              <option value="easy"   data-i18n="recipe.diff_easy">Easy</option>
+              <option value="medium" data-i18n="recipe.diff_medium">Medium</option>
+              <option value="hard"   data-i18n="recipe.diff_hard">Hard</option>
             </select>
           </div>
         </div>
@@ -63,14 +68,14 @@
 
       <!-- Image Upload via Cloudinary -->
       <section class="form-section">
-        <h2>Recipe Photo</h2>
-        <p class="form-hint">
+        <h2 data-i18n="recipe.section_photo">Recipe Photo</h2>
+        <p class="form-hint" data-i18n="recipe.photo_hint">
           Upload directly to Cloudinary. The image URL is automatically saved when you submit.
         </p>
 
         <div class="upload-area">
           <img id="image-preview" src="" alt="" style="display:none;" />
-          <button type="button" id="upload-btn" class="btn btn-outline">
+          <button type="button" id="upload-btn" class="btn btn-outline" data-i18n="recipe.upload_btn">
             📷 Upload Photo
           </button>
           <p id="upload-status" class="form-hint"></p>
@@ -81,37 +86,42 @@
 
       <!-- Ingredients -->
       <section class="form-section">
-        <h2>Ingredients</h2>
-        <p class="form-hint">Add each ingredient on its own line.</p>
+        <h2 data-i18n="recipe.section_ingr">Ingredients</h2>
+        <p class="form-hint" data-i18n="recipe.ingr_hint">Add each ingredient on its own line.</p>
         <div id="ingredients-container">
           <div class="dynamic-field">
-            <input type="text" class="ingredient-input" placeholder="e.g. 2 cups jasmine rice" />
+            <input type="text" class="ingredient-input"
+              placeholder="e.g. 2 cups jasmine rice"
+              data-i18n-placeholder="recipe.ingr_ph" />
             <button type="button" class="btn-remove" onclick="removeField(this)">✕</button>
           </div>
         </div>
-        <button type="button" id="add-ingredient" class="btn btn-secondary btn-sm">
+        <button type="button" id="add-ingredient" class="btn btn-secondary btn-sm" data-i18n="recipe.add_ingr_btn">
           + Add Ingredient
         </button>
       </section>
 
       <!-- Steps -->
       <section class="form-section">
-        <h2>Instructions</h2>
-        <p class="form-hint">Add each step in order.</p>
+        <h2 data-i18n="recipe.section_steps">Instructions</h2>
+        <p class="form-hint" data-i18n="recipe.steps_hint">Add each step in order.</p>
         <div id="steps-container">
           <div class="dynamic-field">
-            <textarea class="step-input" rows="2" placeholder="Step 1: …"></textarea>
+            <textarea class="step-input" rows="2"
+              placeholder="Step 1: …"
+              data-i18n-placeholder="recipe.step_ph"
+              data-i18n-n="1"></textarea>
             <button type="button" class="btn-remove" onclick="removeField(this)">✕</button>
           </div>
         </div>
-        <button type="button" id="add-step" class="btn btn-secondary btn-sm">
+        <button type="button" id="add-step" class="btn btn-secondary btn-sm" data-i18n="recipe.add_step_btn">
           + Add Step
         </button>
       </section>
 
       <div class="form-actions">
-        <a href="/index.html" class="btn btn-outline">Cancel</a>
-        <button type="submit" class="btn btn-primary" id="submit-btn">Save Recipe</button>
+        <a href="/index.html" class="btn btn-outline" data-i18n="recipe.cancel_btn">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="submit-btn" data-i18n="recipe.save_btn">Save Recipe</button>
       </div>
     </form>
   </main>
@@ -119,9 +129,12 @@
   <script type="module">
     import { api, isLoggedIn, getUser } from "./js/api.js";
     import { initNav } from "./js/main.js";
+    import { i18n } from "./js/i18n.js";
 
     // Redirect anonymous users
     if (!isLoggedIn()) window.location.href = "/login.html";
+
+    i18n.init();
     initNav();
 
     // ── Check if we're editing an existing recipe ─────────────────────────
@@ -130,8 +143,8 @@
     let existingRecipe = null;
 
     if (editId) {
-      document.getElementById("page-title").textContent = "Edit Recipe";
-      document.getElementById("submit-btn").textContent = "Update Recipe";
+      document.getElementById("page-title").textContent = i18n.t("recipe.edit_title");
+      document.getElementById("submit-btn").textContent = i18n.t("recipe.update_btn");
       loadExistingRecipe(editId);
     }
 
@@ -146,7 +159,7 @@
         }
         prefillForm(existingRecipe);
       } catch (err) {
-        alert("Could not load recipe: " + err.message);
+        alert(i18n.t("recipe.load_fail", { error: err.message }));
       }
     }
 
@@ -161,7 +174,7 @@
         const preview = document.getElementById("image-preview");
         preview.src = recipe.image_url;
         preview.style.display = "block";
-        document.getElementById("upload-status").textContent = "Current image loaded.";
+        document.getElementById("upload-status").textContent = i18n.t("recipe.image_loaded");
       }
 
       // Prefill ingredients
@@ -201,13 +214,14 @@
       },
       (error, result) => {
         if (error) {
-          document.getElementById("upload-status").textContent = "Upload failed: " + error.message;
+          document.getElementById("upload-status").textContent =
+            i18n.t("recipe.upload_fail", { error: error.message });
           return;
         }
         if (result.event === "success") {
           const url = result.info.secure_url;
           document.getElementById("image_url").value = url;
-          document.getElementById("upload-status").textContent = "✓ Image uploaded!";
+          document.getElementById("upload-status").textContent = i18n.t("recipe.upload_ok");
           const preview = document.getElementById("image-preview");
           preview.src = url;
           preview.style.display = "block";
@@ -220,24 +234,45 @@
     // ── Dynamic ingredient / step fields ─────────────────────────────────
 
     function addField(containerId, className, value = "") {
+      const container = document.getElementById(containerId);
       const div = document.createElement("div");
       div.className = "dynamic-field";
-      div.innerHTML = `
-        <input type="text" class="${className}" placeholder="Add item…" value="${value}" />
-        <button type="button" class="btn-remove" onclick="removeField(this)">✕</button>
-      `;
-      document.getElementById(containerId).appendChild(div);
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = className;
+      input.value = value;
+      input.dataset.i18nPlaceholder = "recipe.item_ph";
+      input.placeholder = i18n.t("recipe.item_ph");
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn-remove";
+      removeBtn.textContent = "✕";
+      removeBtn.setAttribute("onclick", "removeField(this)");
+      div.appendChild(input);
+      div.appendChild(removeBtn);
+      container.appendChild(div);
     }
 
     function addStepField(value = "") {
+      const container = document.getElementById("steps-container");
+      const index = container.children.length + 1;
       const div = document.createElement("div");
       div.className = "dynamic-field";
-      const index = document.getElementById("steps-container").children.length + 1;
-      div.innerHTML = `
-        <textarea class="step-input" rows="2" placeholder="Step ${index}: …">${value}</textarea>
-        <button type="button" class="btn-remove" onclick="removeField(this)">✕</button>
-      `;
-      document.getElementById("steps-container").appendChild(div);
+      const ta = document.createElement("textarea");
+      ta.className = "step-input";
+      ta.rows = 2;
+      ta.value = value;
+      ta.dataset.i18nPlaceholder = "recipe.step_ph";
+      ta.dataset.i18nN = index;
+      ta.placeholder = i18n.t("recipe.step_ph", { n: index });
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn-remove";
+      removeBtn.textContent = "✕";
+      removeBtn.setAttribute("onclick", "removeField(this)");
+      div.appendChild(ta);
+      div.appendChild(removeBtn);
+      container.appendChild(div);
     }
 
     // Expose to onclick attributes
@@ -247,6 +282,19 @@
       addField("ingredients-container", "ingredient-input")
     );
     document.getElementById("add-step").addEventListener("click", () => addStepField());
+
+    // ── Re-render on language change ──────────────────────────────────────
+    document.addEventListener("i18n:langchange", () => {
+      if (editId) {
+        document.getElementById("page-title").textContent = i18n.t("recipe.edit_title");
+        document.getElementById("submit-btn").textContent = i18n.t("recipe.update_btn");
+      }
+      // Re-number dynamic step placeholders
+      document.querySelectorAll(".step-input").forEach((el, idx) => {
+        el.dataset.i18nN = idx + 1;
+        el.placeholder = i18n.t("recipe.step_ph", { n: idx + 1 });
+      });
+    });
 
     // ── Form submission ───────────────────────────────────────────────────
     document.getElementById("recipe-form").addEventListener("submit", async (e) => {
@@ -282,24 +330,24 @@
 
       // Basic client-side validation
       if (!payload.title || !payload.description || !payload.cooking_time || !payload.difficulty) {
-        errorEl.textContent = "Please fill in all required fields.";
+        errorEl.textContent = i18n.t("recipe.err_fields");
         errorEl.style.display = "block";
         return;
       }
       if (ingredients.length === 0) {
-        errorEl.textContent = "Please add at least one ingredient.";
+        errorEl.textContent = i18n.t("recipe.err_ingr");
         errorEl.style.display = "block";
         return;
       }
       if (steps.length === 0) {
-        errorEl.textContent = "Please add at least one step.";
+        errorEl.textContent = i18n.t("recipe.err_steps");
         errorEl.style.display = "block";
         return;
       }
 
       const btn = document.getElementById("submit-btn");
       btn.disabled = true;
-      btn.textContent = "Saving…";
+      btn.textContent = i18n.t("recipe.saving");
 
       try {
         let recipe;
@@ -308,7 +356,7 @@
         } else {
           recipe = await api.post("/recipes/", payload);
         }
-        successEl.textContent = "Recipe saved! Redirecting…";
+        successEl.textContent = i18n.t("recipe.saved");
         successEl.style.display = "block";
         setTimeout(() => {
           window.location.href = `/recipe-detail.html?id=${recipe.id}`;
@@ -317,7 +365,7 @@
         errorEl.textContent = err.message;
         errorEl.style.display = "block";
         btn.disabled = false;
-        btn.textContent = editId ? "Update Recipe" : "Save Recipe";
+        btn.textContent = editId ? i18n.t("recipe.update_btn") : i18n.t("recipe.save_btn");
       }
     });
   </script>

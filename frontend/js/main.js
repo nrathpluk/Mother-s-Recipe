@@ -3,6 +3,7 @@
  */
 
 import { isLoggedIn, getUser, logout } from "./api.js";
+import { i18n } from "./i18n.js";
 
 // ─── Navigation bar: show/hide links based on login state ──────────────────
 
@@ -11,22 +12,45 @@ export function initNav() {
   if (!navLinks) return;
 
   const user = getUser();
+  const currentLang = i18n.getLang();
+
+  const langToggle = `
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button class="lang-toggle-btn${currentLang === "th" ? " active" : ""}" data-lang="th">TH</button>
+      <button class="lang-toggle-btn${currentLang === "en" ? " active" : ""}" data-lang="en">EN</button>
+    </div>
+  `;
 
   if (isLoggedIn() && user) {
     navLinks.innerHTML = `
-      <a href="/index.html">Home</a>
-      <a href="/add-recipe.html">+ Add Recipe</a>
-      <span class="nav-user">Hi, ${escapeHtml(user.username)}</span>
-      <button id="logout-btn" class="btn-link">Logout</button>
+      <a href="/index.html">${i18n.t("nav.home")}</a>
+      <a href="/add-recipe.html">${i18n.t("nav.add_recipe")}</a>
+      <span class="nav-user">${i18n.t("nav.hi_user", { username: escapeHtml(user.username) })}</span>
+      <button id="logout-btn" class="btn-link">${i18n.t("nav.logout")}</button>
+      ${langToggle}
     `;
     document.getElementById("logout-btn").addEventListener("click", logout);
   } else {
     navLinks.innerHTML = `
-      <a href="/index.html">Home</a>
-      <a href="/login.html">Login</a>
-      <a href="/register.html">Register</a>
+      <a href="/index.html">${i18n.t("nav.home")}</a>
+      <a href="/login.html">${i18n.t("nav.login")}</a>
+      <a href="/register.html">${i18n.t("nav.register")}</a>
+      ${langToggle}
     `;
   }
+
+  // Attach language toggle listeners after innerHTML is set
+  navLinks.querySelectorAll(".lang-toggle-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.lang === i18n.getLang()) return;
+      document.body.classList.add("lang-transitioning");
+      setTimeout(() => {
+        i18n.setLang(btn.dataset.lang);
+        initNav();
+        document.body.classList.remove("lang-transitioning");
+      }, 180);
+    });
+  });
 }
 
 // ─── Star rating renderer ───────────────────────────────────────────────────
@@ -53,7 +77,8 @@ export function renderStars(rating, max = 5) {
 
 export function difficultyBadge(level) {
   const colors = { easy: "green", medium: "orange", hard: "red" };
-  return `<span class="badge badge-${colors[level] || "gray"}">${level}</span>`;
+  const label = i18n.t(`difficulty.${level}`) || level;
+  return `<span class="badge badge-${colors[level] || "gray"}">${escapeHtml(label)}</span>`;
 }
 
 // ─── XSS-safe HTML escaping ─────────────────────────────────────────────────
