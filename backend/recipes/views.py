@@ -3,11 +3,15 @@ API views for Mother's Recipe.
 """
 
 from django.contrib.auth.models import User
+from django.conf import settings
 from rest_framework import generics, status, filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 from .models import Recipe, Review, Favorite
 from .serializers import (
@@ -45,6 +49,82 @@ class RegisterView(APIView):
                 "refresh": str(refresh),
             },
             status=status.HTTP_201_CREATED,
+        )
+
+
+class GoogleLoginView(APIView):
+    """
+    POST /api/auth/google/
+    Verify a Google Identity Services credential (ID token), then return JWT tokens.
+    Creates a new User if this is the first time this Google account logs in.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        credential = request.data.get("credential", "").strip()
+        if not credential:
+            return Response(
+                {"detail": "credential is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Verify the Google ID token with Google's public keys
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                credential,
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID or None,  # None skips audience check (dev only)
+            )
+        except ValueError:
+            return Response(
+                {"detail": "Invalid or expired Google token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        email      = idinfo.get("email", "")
+        given_name = idinfo.get("given_name", "")
+        family_name = idinfo.get("family_name", "")
+
+        if not email:
+            return Response(
+                {"detail": "Google account has no email."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Find existing user by email, or create a new one
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Build a unique username from the part before @
+            base = email.split("@")[0]
+            username = base
+            counter  = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base}{counter}"
+                counter += 1
+
+            user = User(
+                username=username,
+                email=email,
+                first_name=given_name,
+                last_name=family_name,
+            )
+            user.set_unusable_password()   # no password — Google auth only
+            user.save()
+
+        if not user.is_active:
+            return Response(
+                {"detail": "This account is disabled."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "user":    {"id": user.id, "username": user.username, "email": user.email},
+                "access":  str(refresh.access_token),
+                "refresh": str(refresh),
+            }
         )
 
 

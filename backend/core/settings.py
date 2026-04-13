@@ -37,14 +37,22 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",           # required by allauth
     # Third-party
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
     "cloudinary",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "dj_rest_auth",
     # Local
     "recipes",
 ]
+
+SITE_ID = 1
 
 # ---------------------------------------------------------------------------
 # Middleware
@@ -59,6 +67,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware", # required by allauth >= 0.56
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -172,3 +181,42 @@ cloudinary.config(
     api_secret=os.environ.get("CLOUDINARY_API_SECRET", ""),
     secure=True,
 )
+
+# ---------------------------------------------------------------------------
+# Authentication Backends — allauth needs its own backend registered
+# ---------------------------------------------------------------------------
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+# ---------------------------------------------------------------------------
+# Google OAuth2 — client ID used to verify Identity Services tokens
+# ---------------------------------------------------------------------------
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": os.environ.get("GOOGLE_CLIENT_ID", ""),
+            "secret":    os.environ.get("GOOGLE_CLIENT_SECRET", ""),
+            "key":       "",
+        },
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "OAUTH_PKCE_ENABLED": True,
+    }
+}
+
+# allauth account settings (allauth >= 0.61 new-style config)
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+
+# ---------------------------------------------------------------------------
+# dj-rest-auth — disable DRF token model (we use JWT instead)
+# ---------------------------------------------------------------------------
+REST_AUTH = {
+    "TOKEN_MODEL": None,
+    "USE_JWT": True,
+    "JWT_AUTH_RETURN_EXPIRATION": False,
+}

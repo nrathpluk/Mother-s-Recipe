@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login — Mother's Recipe</title>
   <link rel="stylesheet" href="/css/style.css" />
+  <!-- Google Identity Services SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="auth-page">
 
@@ -51,6 +53,29 @@
         </button>
       </form>
 
+      <!-- Divider -->
+      <div class="auth-divider">or</div>
+
+      <!-- Google Sign-In button rendered by Google Identity Services -->
+      <!-- Replace YOUR_GOOGLE_CLIENT_ID with your actual Client ID -->
+      <div id="g_id_onload"
+           data-client_id="YOUR_GOOGLE_CLIENT_ID"
+           data-callback="handleGoogleLogin"
+           data-auto_prompt="false">
+      </div>
+      <div class="google-btn-wrapper">
+        <div class="g_id_signin"
+             data-type="standard"
+             data-size="large"
+             data-theme="outline"
+             data-text="sign_in_with"
+             data-shape="rectangular"
+             data-width="348">
+        </div>
+      </div>
+
+      <p id="google-error-msg" class="msg error" style="display:none;"></p>
+
       <p class="auth-switch">
         Don't have an account? <a href="/register.html">Register here</a>
       </p>
@@ -59,6 +84,7 @@
 
   <script type="module">
     import { initNav, isLoggedIn } from "./js/main.js";
+    import { api, saveAuthData } from "./js/api.js";
 
     // Already logged in → redirect home
     if (isLoggedIn()) window.location.href = "/index.html";
@@ -72,6 +98,22 @@
     document.getElementById("login-form").addEventListener("submit", () => {
       document.getElementById("login-btn").textContent = "Logging in…";
     }, { once: true });
+
+    // Google Identity Services callback — must be a global function
+    window.handleGoogleLogin = async function (googleResponse) {
+      const googleErrorEl = document.getElementById("google-error-msg");
+      googleErrorEl.style.display = "none";
+      try {
+        const data = await api.post("/auth/google/", {
+          credential: googleResponse.credential,
+        });
+        saveAuthData(data);
+        window.location.href = "/index.html";
+      } catch (err) {
+        googleErrorEl.textContent = err.message || "Google login failed. Please try again.";
+        googleErrorEl.style.display = "";
+      }
+    };
   </script>
 
 </body>

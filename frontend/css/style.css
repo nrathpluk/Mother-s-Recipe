@@ -642,6 +642,28 @@ a:hover { text-decoration: underline; }
   color:       var(--color-text-muted);
 }
 
+/* ── Google Login ───────────────────────────────────────────── */
+.auth-divider {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+  margin:      24px 0 20px;
+  color:       var(--color-text-muted);
+  font-size:   0.85rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content:    '';
+  flex:       1;
+  height:     1px;
+  background: var(--color-border);
+}
+
+.google-btn-wrapper {
+  display:         flex;
+  justify-content: center;
+}
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .hero h1    { font-size: 1.8rem; }
