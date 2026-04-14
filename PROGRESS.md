@@ -123,3 +123,4 @@
 | 2026-04-13 | อัปเดต DEPLOYMENT.md ให้แสดง status table + คำแนะนำ Google Cloud Console |
 | 2026-04-13 | สร้างไฟล์ PROGRESS.md ติดตามความคืบหน้าโปรเจกต์ |
 | 2026-04-13 | เพิ่ม Thai/English language toggle — i18n.js + data-i18n attrs ใน index, login, add-recipe; toggle pill ใน navbar |
+| 2026-04-14 | แก้ 3 console errors ใน login.html: (1) handleGoogleLogin ย้ายไป plain script ก่อน GSI โหลด, (2) import isLoggedIn จาก api.js แทน main.js, (3) เพิ่ม COOP meta tag |

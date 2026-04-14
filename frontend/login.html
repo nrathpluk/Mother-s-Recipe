@@ -6,6 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login — Mother's Recipe</title>
   <link rel="stylesheet" href="/css/style.css" />
+  <!-- Allow Google Sign-In popup to communicate back to this page -->
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+  <!-- Define callback in plain global scope BEFORE GSI script loads -->
+  <script>
+    window.handleGoogleLogin = async function(response) {
+      const googleErrorEl = document.getElementById("google-error-msg");
+      googleErrorEl.style.display = "none";
+      try {
+        const { api, saveAuthData } = await import("./js/api.js");
+        const data = await api.post("/auth/google/", {
+          credential: response.credential,
+        });
+        saveAuthData(data);
+        window.location.href = "/index.html";
+      } catch (err) {
+        const { i18n } = await import("./js/i18n.js");
+        googleErrorEl.textContent = err.message || i18n.t("login.google_error");
+        googleErrorEl.style.display = "";
+      }
+    };
+  </script>
   <!-- Google Identity Services SDK -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -69,8 +90,8 @@
   </main>
 
   <script type="module">
-    import { initNav, isLoggedIn } from "./js/main.js";
-    import { api, saveAuthData } from "./js/api.js";
+    import { initNav } from "./js/main.js";
+    import { isLoggedIn } from "./js/api.js";
     import { i18n } from "./js/i18n.js";
 
     // Already logged in → redirect home
@@ -86,22 +107,6 @@
     document.getElementById("login-form").addEventListener("submit", () => {
       document.getElementById("login-btn").textContent = i18n.t("login.logging_in");
     }, { once: true });
-
-    // Google Identity Services callback — must be a global function
-    window.handleGoogleLogin = async function (googleResponse) {
-      const googleErrorEl = document.getElementById("google-error-msg");
-      googleErrorEl.style.display = "none";
-      try {
-        const data = await api.post("/auth/google/", {
-          credential: googleResponse.credential,
-        });
-        saveAuthData(data);
-        window.location.href = "/index.html";
-      } catch (err) {
-        googleErrorEl.textContent = err.message || i18n.t("login.google_error");
-        googleErrorEl.style.display = "";
-      }
-    };
   </script>
 
 </body>
