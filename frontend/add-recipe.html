@@ -207,10 +207,8 @@
         uploadPreset: UPLOAD_PRESET,
         sources: ["local", "camera", "url"],
         multiple: false,
-        maxFileSize: 5000000,   // 5 MB limit
-        cropping: false,
-        resourceType: "image",
         folder: "mothers-recipe",
+        maxFileSize: 5000000,
       },
       (error, result) => {
         if (error) {
