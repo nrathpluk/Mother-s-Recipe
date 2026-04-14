@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mother's Recipe</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
+
 <body>
 
   <!-- Navigation -->
@@ -19,13 +21,8 @@
     <h1 data-i18n="hero.title">Recipes Made with Love</h1>
     <p data-i18n="hero.subtitle">Discover and share home-cooked recipes from families around the world.</p>
     <form id="search-form" class="search-bar">
-      <input
-        type="text"
-        id="search-input"
-        placeholder="Search recipes or ingredients…"
-        data-i18n-placeholder="search.placeholder"
-        autocomplete="off"
-      />
+      <input type="text" id="search-input" placeholder="Search recipes or ingredients…"
+        data-i18n-placeholder="search.placeholder" autocomplete="off" />
       <button type="submit" class="btn btn-primary" data-i18n="search.button">Search</button>
     </form>
   </section>
@@ -40,7 +37,7 @@
   </main>
 
   <footer class="footer">
-    <p data-i18n="footer.text">© 2025 Mother's Recipe — Built with ❤️</p>
+    <p data-i18n="footer.text">© 2025 Mother's Recipe — Built with Love</p>
   </footer>
 
   <script type="module">
@@ -56,9 +53,9 @@
 
     // ── Build a recipe card HTML string ──────────────────────────────────
     function buildCard(recipe) {
-      const rating  = renderStars(recipe.average_rating);
-      const badge   = difficultyBadge(recipe.difficulty);
-      const imgSrc  = recipe.image_url || "https://placehold.co/400x250?text=No+Image";
+      const rating = renderStars(recipe.average_rating);
+      const badge = difficultyBadge(recipe.difficulty);
+      const imgSrc = recipe.image_url || "https://placehold.co/400x250?text=No+Image";
 
       return `
         <article class="recipe-card" onclick="window.location.href='/recipe-detail.html?id=${recipe.id}'">
@@ -134,7 +131,7 @@
     document.getElementById("search-form").addEventListener("submit", (e) => {
       e.preventDefault();
       currentSearch = document.getElementById("search-input").value.trim();
-      currentPage   = 1;
+      currentPage = 1;
       loadRecipes(currentPage, currentSearch);
     });
 
@@ -148,4 +145,5 @@
   </script>
 
 </body>
+
 </html>

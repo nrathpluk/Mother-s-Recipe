@@ -10,7 +10,7 @@
   <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
   <!-- Define callback in plain global scope BEFORE GSI script loads -->
   <script>
-    window.handleGoogleLogin = async function(response) {
+    window.handleGoogleLogin = async function (response) {
       const googleErrorEl = document.getElementById("google-error-msg");
       googleErrorEl.style.display = "none";
       try {
@@ -49,16 +49,14 @@
       <form id="login-form" novalidate>
         <div class="form-group">
           <label for="username" data-i18n="login.username_label">Username</label>
-          <input type="text" id="username" name="username" required autocomplete="username"
-            placeholder="your_username"
+          <input type="text" id="username" name="username" required autocomplete="username" placeholder="your_username"
             data-i18n-placeholder="login.username_ph" />
         </div>
 
         <div class="form-group">
           <label for="password" data-i18n="login.password_label">Password</label>
           <input type="password" id="password" name="password" required autocomplete="current-password"
-            placeholder="••••••••"
-            data-i18n-placeholder="login.password_ph" />
+            placeholder="••••••••" data-i18n-placeholder="login.password_ph" />
         </div>
 
         <button type="submit" class="btn btn-primary btn-full" id="login-btn" data-i18n="login.button">
