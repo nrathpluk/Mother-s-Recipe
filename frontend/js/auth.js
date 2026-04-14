@@ -4,6 +4,7 @@
  */
 
 import { api, saveAuthData } from "./api.js";
+import { showMessage } from "./main.js";
 
 // ─── Login ─────────────────────────────────────────────────────────────────
 
@@ -13,6 +14,7 @@ if (loginForm) {
     e.preventDefault();
     const errorEl = document.getElementById("error-msg");
     errorEl.textContent = "";
+    errorEl.style.display = "none";
 
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
@@ -22,7 +24,7 @@ if (loginForm) {
       saveAuthData(data);
       window.location.href = "/index.html";
     } catch (err) {
-      errorEl.textContent = err.message;
+      showMessage("error-msg", err.message);
     }
   });
 }
@@ -35,6 +37,7 @@ if (registerForm) {
     e.preventDefault();
     const errorEl = document.getElementById("error-msg");
     errorEl.textContent = "";
+    errorEl.style.display = "none";
 
     const username  = document.getElementById("username").value.trim();
     const email     = document.getElementById("email").value.trim();
@@ -42,7 +45,7 @@ if (registerForm) {
     const password2 = document.getElementById("password2").value;
 
     if (password !== password2) {
-      errorEl.textContent = "Passwords do not match.";
+      showMessage("error-msg", "Passwords do not match.");
       return;
     }
 
@@ -56,7 +59,7 @@ if (registerForm) {
       saveAuthData(data);
       window.location.href = "/index.html";
     } catch (err) {
-      errorEl.textContent = err.message;
+      showMessage("error-msg", err.message);
     }
   });
 }
